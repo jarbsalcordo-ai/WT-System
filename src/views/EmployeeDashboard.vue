@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="flex justify-between items-center mb-8">
       <div>
-        <h1 class="text-3xl font-bold">Welcome back, Raque</h1>
+        <h1 class="text-3xl font-bold">Welcome back, Ken</h1>
         <p class="text-gray-400 text-sm">Manage your schedule requests and approvals</p>
       </div>
       <div class="flex items-center space-x-6">
