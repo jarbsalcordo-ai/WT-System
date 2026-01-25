@@ -21,22 +21,22 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
        <div class="space-y-2">
          <label class="text-xs text-gray-400 uppercase tracking-wider">Name:</label>
-         <input type="text" v-model="internalFormData.name" class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500 transition" />
+         <input type="text" v-model="internalFormData.name" readonly class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none transition opacity-60 cursor-not-allowed" />
        </div>
        
        <div class="space-y-2">
          <label class="text-xs text-gray-400 uppercase tracking-wider">Date Filed:</label>
-         <input type="date" v-model="internalFormData.dateFiled" class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500 transition" />
+         <input type="date" v-model="internalFormData.dateFiled" readonly class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none transition opacity-60 cursor-not-allowed" />
        </div>
 
        <div class="space-y-2">
          <label class="text-xs text-gray-400 uppercase tracking-wider">Position:</label>
-         <input type="text" v-model="internalFormData.position" class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500 transition" />
+         <input type="text" v-model="internalFormData.position" readonly class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none transition opacity-60 cursor-not-allowed" />
        </div>
 
        <div class="space-y-2">
          <label class="text-xs text-gray-400 uppercase tracking-wider">Department:</label>
-         <input type="text" v-model="internalFormData.department" class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500 transition" />
+         <input type="text" v-model="internalFormData.department" readonly class="w-full bg-[#333] border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none transition opacity-60 cursor-not-allowed" />
        </div>
        
        <!-- Dynamic Form Fields -->

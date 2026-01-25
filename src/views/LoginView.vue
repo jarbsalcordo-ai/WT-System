@@ -43,47 +43,23 @@
           <!-- Login Form -->
           <div class="w-full space-y-5">
             
-            <!-- Role Selector -->
-            <div class="relative z-50"> <!-- Increased Z-index for dropdown -->
-              <button 
-                @click="showRoleDropdown = !showRoleDropdown" 
-                class="w-full bg-transparent text-left text-white text-lg py-2 flex justify-between items-center focus:outline-none group"
-              >
-                <span>Log in as {{ selectedRole }}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" :class="['w-5 h-5 transition-transform duration-300', showRoleDropdown ? 'rotate-180' : '']">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                </svg>
-              </button>
-              
-              <!-- Dropdown Menu -->
-              <transition name="dropdown-fade">
-                 <div v-if="showRoleDropdown" class="absolute top-full left-0 w-full bg-[#2A2A2A] border border-gray-700 rounded-xl shadow-xl mt-2 overflow-hidden py-2">
-                    <div 
-                       v-for="role in roles" 
-                       :key="role" 
-                       @click="selectRole(role)"
-                       class="px-5 py-3 text-gray-300 hover:bg-[#d4a017] hover:text-black cursor-pointer transition-colors"
-                    >
-                       {{ role }}
-                    </div>
-                 </div>
-              </transition>
-            </div>
+
 
             <!-- Inputs Wrapper -->
             <div class="space-y-4">
-              <!-- Company ID Input -->
-              <div class="relative">
+               <!-- Identity Input (Toggles based on Role) -->
                  <input 
+                  v-model="identifier"
+                  @input="identifier = $event.target.value.toUpperCase()"
                   type="text" 
-                  placeholder="Enter Company ID" 
-                  class="w-full bg-white text-gray-900 rounded-xl px-5 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-[#d4a017] placeholder-gray-500 italic"
+                  placeholder="Enter Company ID"
+                  class="w-full bg-white text-gray-900 rounded-xl px-5 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-[#d4a017] placeholder-gray-500 italic uppercase"
                  />
-              </div>
 
               <!-- Password Input -->
               <div class="relative">
                  <input 
+                  v-model="password"
                   :type="showPassword ? 'text' : 'password'" 
                   placeholder="Enter Password" 
                   class="w-full bg-white text-gray-900 rounded-xl px-5 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-[#d4a017] placeholder-gray-500 italic pr-12"
@@ -119,21 +95,58 @@ export default {
   name: "LoginView",
   data() {
     return {
+      identifier: '',
+      password: '',
       showPassword: false,
-      showRoleDropdown: false,
-      selectedRole: 'Employee',
-      roles: ['Employee', 'HR Manager', 'Department Head', 'Officer', 'Operations Manager']
+
     }
   },
   methods: {
-    handleLogin() {
-      // Temporary login logic
-      localStorage.setItem('token', 'temp-token-123'); // Simulate login
-      this.$router.push('/dashboard');
-    },
-    selectRole(role) {
-      this.selectedRole = role;
-      this.showRoleDropdown = false;
+    async handleLogin() {
+      if (!this.identifier || !this.password) {
+        alert('Please enter your credentials.');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/api/login', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ 
+              identifier: this.identifier, 
+              password: this.password
+           })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+           // Login Success
+           localStorage.setItem('token', data.token);
+           localStorage.setItem('user', JSON.stringify(data.user));
+           
+           // Redirect based on role
+           const role = data.user.role;
+           if (role === 'Admin') {
+              this.$router.push('/admin-dashboard');
+           } else if (role === 'HR Manager') {
+              this.$router.push('/hr-dashboard');
+           } else if (role === 'Operations Manager') {
+              this.$router.push('/om-dashboard');
+           } else if (role === 'Department Head') {
+              this.$router.push('/dept-head-dashboard');
+           } else {
+              // Default for Employees, Officers, etc.
+              this.$router.push('/dashboard');
+           }
+        } else {
+           // Login Failed
+           alert(data.error || 'Login failed');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('An server error occurred. Please ensure the backend is running.');
+      }
     }
   }
 };

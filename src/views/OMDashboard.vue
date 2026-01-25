@@ -47,8 +47,8 @@
 
          <div class="relative">
             <button @click="showProfileDropdown = !showProfileDropdown" class="flex items-center space-x-3 bg-[#2A2A2A] rounded-full px-4 py-2 border border-gray-700 hover:border-yellow-500 transition">
-               <div class="w-8 h-8 rounded-full bg-[#d4a017] flex items-center justify-center text-black font-bold text-sm">OM</div>
-               <span class="font-medium text-sm hidden md:block">Ops Manager</span>
+               <div class="w-8 h-8 rounded-full bg-[#d4a017] flex items-center justify-center text-black font-bold text-sm">{{ (userData.first_name?.[0] || 'O') + (userData.last_name?.[0] || 'M') }}</div>
+               <span class="font-medium text-sm hidden md:block">{{ userData.first_name }} {{ userData.last_name }}</span>
                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-gray-400">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                </svg>
@@ -57,8 +57,8 @@
             <!-- Profile Dropdown -->
             <div v-if="showProfileDropdown" class="absolute right-0 mt-3 w-56 bg-[#2A2A2A] border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden animate-zoom-in">
                <div class="p-4 border-b border-gray-600">
-                  <p class="text-sm font-bold text-white">Ops Manager</p>
-                  <p class="text-xs text-gray-400">om@watchtower.com</p>
+                  <p class="text-sm font-bold text-white">{{ userData.first_name }} {{ userData.last_name }}</p>
+                  <p class="text-xs text-gray-400">{{ userData.email }}</p>
                </div>
                <div class="py-2">
                   <router-link to="/om/account" class="block px-4 py-2 text-sm text-gray-300 hover:bg-[#333] hover:text-white transition">
@@ -164,7 +164,8 @@
                    <th class="px-8 py-4 font-medium">Request Type</th>
                    <th class="px-8 py-4 font-medium">Details</th>
                    <th class="px-8 py-4 font-medium">Date Filed</th>
-                   <th class="px-8 py-4 font-medium">Status</th>
+                   <th class="px-8 py-4 font-medium">OM Status</th>
+                   <th class="px-8 py-4 font-medium">OM Approver</th>
                    <th class="px-8 py-4 font-medium text-right">Actions</th>
                 </tr>
              </thead>
@@ -192,12 +193,15 @@
                    </td>
                    <td class="px-8 py-4 text-sm text-gray-400">{{ req.date }}</td>
                    <td class="px-8 py-4">
-                      <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', getStatusColor(req.status)]">
-                         {{ req.status }}
+                      <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', getStatusColor(req.om_status)]">
+                         {{ req.om_status }}
                       </span>
                    </td>
+                   <td class="px-8 py-4 text-sm text-gray-500">
+                      {{ req.om_approved_by || '---' }}
+                   </td>
                    <td class="px-8 py-4 text-right">
-                      <div v-if="req.status === 'Pending'" class="flex justify-end gap-2" @click.stop>
+                      <div v-if="req.om_status === 'Pending'" class="flex justify-end gap-2" @click.stop>
                          <button @click="updateStatus(req.id, 'Approved')" class="p-2 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded-lg transition" title="Approve">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -274,7 +278,7 @@
              
              <div class="p-6 border-t border-gray-700 bg-[#333] flex justify-end gap-3">
                 <button @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition">Close</button>
-                <div v-if="selectedRequest && selectedRequest.status === 'Pending'" class="flex gap-2">
+                <div v-if="selectedRequest && selectedRequest.om_status === 'Pending'" class="flex gap-2">
                    <button @click="updateStatus(selectedRequest.id, 'Rejected')" class="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 rounded-lg transition">Reject</button>
                    <button @click="updateStatus(selectedRequest.id, 'Approved')" class="px-6 py-2 bg-[#d4a017] hover:bg-[#b88b14] text-black font-bold rounded-lg transition shadow-lg">Approve</button>
                 </div>
@@ -282,7 +286,42 @@
           </div>
        </div>
 
+       <!-- Confirmation Modal -->
+       <div v-if="showConfirmation" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+           <div class="bg-[#2A2A2A] w-full max-w-sm rounded-2xl shadow-2xl border border-gray-700 p-8 text-center animate-zoom-in">
+               <div :class="['w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-colors duration-500', pendingAction.status === 'Approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500']">
+                   <svg v-if="pendingAction.status === 'Approved'" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                   <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+               </div>
+               <h3 class="text-xl font-bold text-white mb-2">Confirm {{ pendingAction.status }}</h3>
+               <p class="text-gray-400 mb-8">Are you sure you want to {{ pendingAction.status.toLowerCase() }} this request? This action cannot be undone.</p>
+               <div class="flex gap-3">
+                   <button @click="showConfirmation = false" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition font-medium">Cancel</button>
+                   <button @click="confirmStatusUpdate" :class="['flex-1 py-3 rounded-xl text-black font-bold transition shadow-lg px-2', pendingAction.status === 'Approved' ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400']">
+                      Yes, {{ pendingAction.status }}
+                   </button>
+               </div>
+           </div>
+       </div>
+
     </div>
+
+       <!-- Logout Confirmation Modal -->
+       <div v-if="showLogoutModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+           <div class="bg-[#2A2A2A] w-full max-w-sm rounded-2xl shadow-2xl border border-gray-700 p-8 text-center animate-zoom-in">
+               <div class="w-16 h-16 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center mx-auto mb-6">
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12" />
+                   </svg>
+               </div>
+               <h3 class="text-xl font-bold text-white mb-2">Confirm Logout</h3>
+               <p class="text-gray-400 mb-8 leading-relaxed">Are you sure you want to log out?</p>
+               <div class="flex gap-3">
+                   <button @click="showLogoutModal = false" class="flex-1 py-3 bg-[#374151] hover:bg-[#4b5563] text-white rounded-xl transition font-medium">Cancel</button>
+                   <button @click="confirmLogout" class="flex-1 py-3 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl transition shadow-lg">Yes, Log out</button>
+               </div>
+           </div>
+       </div>
   </div>
 </template>
 
@@ -298,44 +337,25 @@ export default {
       showProfileDropdown: false,
       showRequestModal: false,
       selectedRequest: null,
-      stats: {
-        total: 18,
-        pending: 6,
-        approved: 12
+      showConfirmation: false,
+      pendingAction: { id: null, status: '' },
+      userData: {
+        first_name: 'Ops',
+        last_name: 'Manager',
+        email: 'om@watchtower.com'
       },
-      requests: [
-         {
-            id: 1,
-            name: "Raque Canete",
-            initials: "RC",
-            department: "Operations",
-            type: "Leave Request",
-            reason: "Personal family emergency needs attention immediately.",
-            date: "Jan 26, 2026",
-            status: "Pending"
-         },
-         {
-            id: 2,
-            name: "John Doe",
-            initials: "JD",
-            department: "IT Support",
-            type: "Shift Swap",
-            reason: "Need to swap shift due to medical appointment.",
-            date: "Jan 27, 2026",
-            status: "Pending"
-         },
-         {
-            id: 3,
-            name: "Alice Smith",
-            initials: "AS",
-            department: "HR",
-            type: "Overtime Request",
-            reason: "Project deadline approaching, need extra hours.",
-            date: "Jan 25, 2026",
-            status: "Approved"
-         }
-      ]
+      stats: {
+        total: 0,
+        pending: 0,
+        approved: 0
+      },
+      requests: [],
+      showLogoutModal: false
     }
+  },
+  mounted() {
+    this.initUser();
+    this.fetchData();
   },
   computed: {
     filteredRequests() {
@@ -368,9 +388,43 @@ export default {
   },
   methods: {
     handleLogout() {
-       if(confirm('Are you sure you want to log out?')) {
-          this.$router.push('/login');
-       }
+       this.showLogoutModal = true;
+       this.showProfileDropdown = false;
+    },
+    confirmLogout() {
+       localStorage.removeItem('token');
+       localStorage.removeItem('user');
+       this.$router.push('/login');
+    },
+    initUser() {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        this.userData = JSON.parse(userStr);
+      }
+    },
+    async fetchData() {
+      try {
+        const response = await fetch('http://localhost:3000/requests');
+        const data = await response.json();
+        this.requests = data.map(r => ({
+          id: r.id,
+          name: `${r.first_name} ${r.last_name}`,
+          initials: (r.first_name[0] + r.last_name[0]).toUpperCase(),
+          department: r.department || 'Operations',
+          type: r.type,
+          reason: r.reason,
+          date: new Date(r.created_at).toLocaleDateString(),
+          status: r.status,
+          om_status: r.om_status === 'Waiting' ? 'Pending' : r.om_status,
+          om_approved_by: r.om_approved_by
+        }));
+
+        this.stats.total = this.requests.length;
+        this.stats.pending = this.requests.filter(r => r.om_status === 'Pending').length;
+        this.stats.approved = this.requests.filter(r => r.om_status === 'Approved').length;
+      } catch (e) {
+        console.error("Error fetching OM data:", e);
+      }
     },
     viewRequest(req) {
       this.selectedRequest = req;
@@ -381,19 +435,32 @@ export default {
       this.selectedRequest = null;
     },
     updateStatus(id, newStatus) {
-       const req = this.requests.find(r => r.id === id);
-       if (req) {
-          if(confirm(`Are you sure you want to mark this as ${newStatus}?`)) {
-             req.status = newStatus;
-             // Update stats mock
-             if (newStatus === 'Approved') this.stats.approved++;
-             if (newStatus === 'Rejected') { /* no stat for rejected yet */ }
-             this.stats.pending--;
-             
-             // Close modal if open
-             this.closeModal();
-          }
-       }
+       this.pendingAction = { id, status: newStatus };
+       this.showConfirmation = true;
+    },
+    async confirmStatusUpdate() {
+        const { id, status } = this.pendingAction;
+        try {
+           const response = await fetch(`http://localhost:3000/requests/${id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                 status: status,
+                 role: 'Operations Manager',
+                 adminName: `${this.userData.first_name} ${this.userData.last_name}`
+              })
+           });
+           
+           if (response.ok) {
+              await this.fetchData();
+              this.showConfirmation = false;
+              this.closeModal();
+           } else {
+              alert('Update failed');
+           }
+        } catch (e) {
+           console.error(e);
+        }
     },
     getStatusColor(status) {
        switch(status) {

@@ -15,10 +15,11 @@
 
         <!-- Navigation Pills -->
         <nav class="flex flex-wrap justify-center gap-4">
-          <a href="#" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">Home</a>
-          <a href="#" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">Services</a>
-          <a href="#" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">Company</a>
-          <a href="#" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">My Account</a>
+          <router-link to="/" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">Home</router-link>
+          <router-link to="/about" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">About</router-link>
+          <router-link to="/bulletin" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">Bulletin</router-link>
+          <router-link to="/schedules" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">Schedules</router-link>
+          <router-link to="/login" class="bg-[#cba028] hover:bg-[#b88b14] text-black font-semibold px-8 py-2.5 rounded-full transition-transform hover:scale-105">Login</router-link>
         </nav>
       </div>
 

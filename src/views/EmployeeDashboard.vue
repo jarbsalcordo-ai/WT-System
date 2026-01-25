@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="flex justify-between items-center mb-8">
       <div>
-        <h1 class="text-3xl font-bold">Welcome back, Ken</h1>
+        <h1 class="text-3xl font-bold">Welcome back, {{ userData.first_name }}</h1>
         <p class="text-gray-400 text-sm">Manage your schedule requests and approvals</p>
       </div>
       <div class="flex items-center space-x-6">
@@ -14,8 +14,8 @@
           <span class="absolute top-0 right-0 block w-2 h-2 bg-red-500 rounded-full border-2 border-[#1E1E1E]"></span>
         </button>
         <div @click="showProfileModal = true" class="flex items-center space-x-3 cursor-pointer bg-[#2A2A2A] rounded-full px-4 py-2 border border-gray-700 hover:bg-[#333] transition">
-          <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-sm">RC</div>
-          <span class="font-medium text-sm hidden md:block">Raque Canete</span>
+          <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-sm">{{ (userData.first_name?.[0] || 'U') + (userData.last_name?.[0] || '') }}</div>
+          <span class="font-medium text-sm hidden md:block">{{ userData.first_name }} {{ userData.last_name }}</span>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-400">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
           </svg>
@@ -47,27 +47,27 @@
                <!-- Placeholder Image -->
                <img src="https://i.pravatar.cc/150?u=raque" alt="Profile" class="w-full h-full object-cover">
             </div>
-            <h3 class="text-xl font-bold">Raque Canete</h3>
-            <p class="text-[#d4a017] text-sm font-medium">Virtual Guard</p>
-            <p class="text-yellow-500/60 text-xs mt-1">ID: 019</p>
+            <h3 class="text-xl font-bold">{{ userData.first_name }} {{ userData.last_name }}</h3>
+            <p class="text-[#d4a017] text-sm font-medium">{{ userData.role }}</p>
+            <p class="text-yellow-500/60 text-xs mt-1">ID: {{ userData.company_id }}</p>
          </div>
 
          <div class="space-y-6">
             <div class="border-b border-gray-700 pb-2">
                <p class="text-[#d4a017] text-sm mb-1">Email Address</p>
-               <p class="text-white">raquecanete60@gmail.com</p>
+               <p class="text-white">{{ userData.email }}</p>
             </div>
              <div class="border-b border-gray-700 pb-2">
-               <p class="text-[#d4a017] text-sm mb-1">Contact Number</p>
-               <p class="text-white">09669103841</p>
+               <p class="text-[#d4a017] text-sm mb-1">Company ID</p>
+               <p class="text-white">{{ userData.company_id }}</p>
             </div>
              <div class="border-b border-gray-700 pb-2">
-               <p class="text-[#d4a017] text-sm mb-1">Position</p>
-               <p class="text-white">Virtual Guard</p>
+               <p class="text-[#d4a017] text-sm mb-1">Role / Position</p>
+               <p class="text-white">{{ userData.role }}</p>
             </div>
              <div class="border-b border-gray-700 pb-2">
-               <p class="text-[#d4a017] text-sm mb-1">Email Address</p>
-               <p class="text-white">raquecanete60@gmail.com</p>
+               <p class="text-[#d4a017] text-sm mb-1">Department</p>
+               <p class="text-white">{{ userData.department }}</p>
             </div>
          </div>
 
@@ -170,7 +170,7 @@
         <!-- Inner Tabs -->
         <div class="flex space-x-8 border-b border-gray-700 pb-4 mb-8 overflow-x-auto">
            <button 
-             v-for="formTab in ['Swap Request', 'Leave Request', 'Overtime Request', 'Undertime Request']"
+             v-for="formTab in ['Shift Swap Request', 'Leave Request', 'Overtime Request', 'Undertime Request']"
              :key="formTab"
              @click="activeFormTab = formTab"
              :class="[
@@ -235,16 +235,58 @@
         </div>
       </div>
 
-      <!-- Weekly Schedules Placeholder -->
-      <div v-if="activeMainTab === 'Weekly Schedules'" class="lg:col-span-3 bg-[#252525] rounded-[2rem] p-8 border border-gray-700 flex items-center justify-center min-h-[400px]">
-        <div class="text-center">
-           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-500 mx-auto mb-4">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-           </svg>
-           <h3 class="text-xl font-bold text-white mb-2">Weekly Schedules</h3>
-           <p class="text-gray-400">Check your upcoming shift schedules.</p>
-           <p class="text-yellow-500 mt-4 text-sm font-medium">Coming Soon</p>
-        </div>
+      <!-- Weekly Schedules -->
+      <div v-if="activeMainTab === 'Weekly Schedules'" class="lg:col-span-3 space-y-6 animate-fade-in">
+         <div class="bg-[#252525] rounded-[2rem] border border-gray-700 overflow-hidden">
+            <div class="p-6 border-b border-gray-700 bg-[#333] flex justify-between items-center">
+               <h3 class="text-xl font-bold text-white">Weekly Schedule</h3>
+               <div class="text-sm text-gray-400">Week of Jan 22 - Jan 28, 2026</div>
+            </div>
+            
+            <div class="overflow-x-auto">
+               <table class="w-full text-center">
+                  <thead>
+                     <tr class="bg-blue-600 text-white text-sm uppercase tracking-wider font-bold">
+                        <th class="px-6 py-4 text-left min-w-[150px] sticky left-0 z-10 bg-blue-600">OJT</th>
+                        <th class="px-4 py-4 min-w-[120px]">Monday</th>
+                        <th class="px-4 py-4 min-w-[120px]">Tuesday</th>
+                        <th class="px-4 py-4 min-w-[120px]">Wednesday</th>
+                        <th class="px-4 py-4 min-w-[120px]">Thursday</th>
+                        <th class="px-4 py-4 min-w-[120px]">Friday</th>
+                        <th class="px-4 py-4 min-w-[120px]">Saturday</th>
+                        <th class="px-4 py-4 min-w-[120px]">Sunday</th>
+                     </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-700">
+                     <tr v-for="(schedule, index) in weeklySchedule" :key="index" class="hover:bg-[#2A2A2A] transition text-sm">
+                        <td class="px-6 py-4 text-left font-bold text-white sticky left-0 bg-[#252525] z-10 border-r border-gray-700">{{ schedule.names }}</td>
+                        <td :class="['px-4 py-4', getScheduleClass(schedule.mon)]">{{ schedule.mon }}</td>
+                        <td :class="['px-4 py-4', getScheduleClass(schedule.tue)]">{{ schedule.tue }}</td>
+                        <td :class="['px-4 py-4', getScheduleClass(schedule.wed)]">{{ schedule.wed }}</td>
+                        <td :class="['px-4 py-4', getScheduleClass(schedule.thu)]">{{ schedule.thu }}</td>
+                        <td :class="['px-4 py-4', getScheduleClass(schedule.fri)]">{{ schedule.fri }}</td>
+                        <td :class="['px-4 py-4', getScheduleClass(schedule.sat)]">{{ schedule.sat }}</td>
+                        <td :class="['px-4 py-4', getScheduleClass(schedule.sun)]">{{ schedule.sun }}</td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+         </div>
+         
+         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div class="flex items-center gap-2 text-sm text-gray-400">
+                <span class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500"></span> 8 AM - 4 PM
+             </div>
+             <div class="flex items-center gap-2 text-sm text-gray-400">
+                <span class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500"></span> 4 PM - 12 AM
+             </div>
+             <div class="flex items-center gap-2 text-sm text-gray-400">
+                <span class="w-3 h-3 rounded-full bg-blue-500/20 border border-blue-500"></span> 12 AM - 8 AM
+             </div>
+             <div class="flex items-center gap-2 text-sm text-gray-400">
+                <span class="w-3 h-3 rounded-full bg-gray-600"></span> OFF
+             </div>
+         </div>
       </div>
 
       <!-- Request History -->
@@ -341,6 +383,24 @@
 
       </div>
     </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div v-if="showLogoutModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+        <div class="bg-[#2A2A2A] w-full max-w-sm rounded-2xl shadow-2xl border border-gray-700 p-8 text-center animate-zoom-in">
+            <div class="w-16 h-16 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Confirm Logout</h3>
+            <p class="text-gray-400 mb-8 leading-relaxed">Are you sure you want to log out?</p>
+            <div class="flex gap-3">
+                <button @click="showLogoutModal = false" class="flex-1 py-3 bg-[#374151] hover:bg-[#4b5563] text-white rounded-xl transition font-medium">Cancel</button>
+                <button @click="confirmLogout" class="flex-1 py-3 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl transition shadow-lg">Yes, Log out</button>
+            </div>
+        </div>
+    </div>
+
   </div>
 </template>
 
@@ -364,10 +424,14 @@ export default {
   data() {
     return {
       activeMainTab: 'Request Forms',
-      activeFormTab: 'Swap Request', // Restored
+      activeFormTab: 'Shift Swap Request', // Sync with DB Enum
       userData: {
-        name: 'Raque Canete',
-        initials: 'RC'
+        first_name: '',
+        last_name: '',
+        company_id: '',
+        role: '',
+        email: '',
+        department: ''
       },
       stats: {
         pending: 0,
@@ -394,14 +458,16 @@ export default {
       requests: [],
       notifications: [],
       isLoading: false,
-      showProfileModal: false
+      showProfileModal: false,
+      weeklySchedule: [],
+      showLogoutModal: false
     };
   },
   computed: {
     // Restored Logic
     activeFormTabComponent() {
       switch(this.activeFormTab) {
-        case 'Swap Request': return 'SwapRequest';
+        case 'Shift Swap Request': return 'SwapRequest';
         case 'Leave Request': return 'LeaveRequest';
         case 'Overtime Request': return 'OvertimeRequest';
         case 'Undertime Request': return 'UndertimeRequest';
@@ -414,10 +480,13 @@ export default {
   },
   methods: {
     handleLogout() {
-      if(confirm('Are you sure you want to log out?')) {
-        localStorage.removeItem('token');
-        this.$router.push('/login');
-      }
+      this.showLogoutModal = true;
+      this.showProfileModal = false;
+    },
+    confirmLogout() {
+       localStorage.removeItem('token');
+       localStorage.removeItem('user');
+       this.$router.push('/login');
     },
     async fetchDashboardData() {
       // Simulate API call
@@ -425,63 +494,52 @@ export default {
       try {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
         
-        // Mock Response Data
-        this.stats = {
-          pending: 1,
-          approved: 5,
-          totalHours: 168,
-          currentCutoff: 'Jan 16-30'
-        };
+        // Fetch Real Data
+        const userStr = localStorage.getItem('user');
+        if (!userStr) throw new Error("No user found");
+        const user = JSON.parse(userStr);
+        this.userData = user;
+        this.formData.name = `${user.first_name} ${user.last_name}`;
+        this.formData.position = user.role || 'Employee';
+        this.formData.department = user.department || 'N/A';
+        this.formData.dateFiled = new Date().toISOString().split('T')[0];
 
-        this.requests = [
-          {
-            id: 1,
-            type: 'Leave Request',
-            status: 'Approved',
-            details: 'Pa print kog resignation..',
-            date: 'Jan 26-29, 2026',
-            meta: '3 days'
-          },
-          {
-            id: 2,
-            type: 'Shift Swap Request',
-            status: 'Pending',
-            details: 'Mahilantan ko ig mid ahaks',
-            date: 'Jan 27, 2026',
-            meta: ''
-          },
-          {
-            id: 3,
-            type: 'Undertime',
-            status: 'Rejected',
-            details: 'Personal errands',
-            date: 'Jan 28, 2026',
-            meta: '2 hours'
-          }
-        ];
-
-        this.notifications = [
-          {
-            id: 1,
-            message: 'Your leave request has been approved',
-            time: '2 hours ago',
-            type: 'success'
-          },
-          {
-            id: 2,
-            message: 'Your undertime request has been rejected',
-            time: '2 hours ago',
-            type: 'error'
-          }
-        ];
-
-        // Autofill Name/Pos for demo
-        this.formData.name = this.userData.name;
-        this.formData.position = 'Virtual Guard'; // Mock
-        this.formData.department = 'Operations'; // Mock
+        // 1. Fetch Requests
+        const reqResponse = await fetch(`http://localhost:3000/requests?userId=${user.id}`);
+        const reqData = await reqResponse.json();
         
-        const today = new Date().toISOString().substr(0, 10);
-        this.formData.dateFiled = today;
+        this.requests = reqData.map(r => ({
+            id: r.id,
+            type: r.type,
+            status: r.status,
+            dh_status: r.dh_status,
+            hr_status: r.hr_status,
+            om_status: r.om_status,
+            dh_approver: r.dh_approved_by,
+            hr_approver: r.hr_approved_by,
+            om_approver: r.om_approved_by,
+            details: r.details,
+            date: new Date(r.created_at).toLocaleDateString(),
+            meta: r.meta_data ? JSON.parse(r.meta_data || '{}') : ''
+        }));
+        
+        // Calculate Stats
+        this.stats.pending = this.requests.filter(r => r.status === 'Pending').length;
+        this.stats.approved = this.requests.filter(r => r.status === 'Approved').length;
+        
+        // 2. Fetch Weekly Schedule
+        const schedResponse = await fetch('http://localhost:3000/schedules');
+        const schedData = await schedResponse.json();
+        this.weeklySchedule = schedData;
+        
+        // 3. Mock Notifications based on recent updates (Since we don't have a real notif table yet)
+        // In a real app, this would be another endpoint
+        this.notifications = this.requests.slice(0, 3).map(r => ({
+            id: r.id,
+            message: `Your ${r.type} is ${r.status}`,
+            time: r.date,
+            type: r.status === 'Approved' ? 'success' : (r.status === 'Rejected' ? 'error' : 'info')
+        }));
 
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
@@ -489,38 +547,48 @@ export default {
         this.isLoading = false;
       }
     },
-    handleRequestSubmit(formType) {
-      // Logic to submit data to backend.
-      // 1. Validate inputs
+    async handleRequestSubmit(formType) {
       if (!this.formData.reason) {
         alert("Please provide a reason.");
         return;
       }
 
-      // 2. Prepare payload
-      const payload = {
-        type: formType,
-        ...this.formData
-      };
+      try {
+          const user = JSON.parse(localStorage.getItem('user'));
+          
+          let meta = {};
+          if (formType === 'Shift Swap Request') {
+              meta = { from: this.formData.swapDateFrom, to: this.formData.swapDateTo };
+          } else if (formType === 'Leave Request') {
+              meta = { date: this.formData.leaveDate, type: this.formData.leaveType, days: this.formData.noOfDays };
+          } else if (formType === 'Overtime Request') {
+              meta = { date: this.formData.overtimeDate, hours: this.formData.overtimeHours };
+          } else if (formType === 'Undertime Request') {
+              meta = { date: this.formData.undertimeDate, hours: this.formData.undertimeHours };
+          }
 
-      console.log("Submitting Request:", payload);
-      
-      // 3. Simulate API post
-      alert(`${formType} submitted successfully!`);
-      
-      // 4. Update UI (Mock update)
-      this.stats.pending++;
-      this.requests.unshift({
-        id: Date.now(),
-        type: formType,
-        status: 'Pending',
-        details: this.formData.reason,
-        date: new Date().toLocaleDateString(),
-        meta: 'Just now'
-      });
-      
-      // 5. Reset specific form fields if needed
-      this.formData.reason = '';
+          const payload = {
+            userId: user.id,
+            type: formType,
+            details: this.formData.reason, 
+            reason: this.formData.reason,
+            meta: meta
+          };
+          
+          const response = await fetch('http://localhost:3000/requests', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) throw new Error("Failed to submit");
+
+          alert(`${formType} submitted successfully!`);
+          this.fetchDashboardData(); 
+          this.formData.reason = '';
+      } catch (e) {
+          alert("Error submitting request: " + e.message);
+      }
     },
     setActiveFormTab(tab) {
       this.activeFormTab = tab;
@@ -532,6 +600,13 @@ export default {
         case 'Rejected': return 'bg-red-500/20 text-red-500 border-red-500/20';
         default: return 'bg-gray-500/20 text-gray-500';
       }
+    },
+    getScheduleClass(schedule) {
+       if (schedule === 'OFF') return 'text-gray-500 font-bold bg-[#333]/50';
+       if (schedule.includes('8 AM')) return 'text-green-400 font-medium';
+       if (schedule.includes('4 PM')) return 'text-yellow-400 font-medium';
+       if (schedule.includes('12 AM')) return 'text-blue-400 font-medium';
+       return 'text-white';
     }
   }
 };
