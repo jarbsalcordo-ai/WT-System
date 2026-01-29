@@ -8,10 +8,26 @@ const routes = [
         component: HomeView
     },
     {
-        path: '/submit-request',
-        name: 'submit-request',
-        component: () => import(/* webpackChunkName: "submit-request" */ '../views/SubmitRequestView.vue')
+        path: '/about',
+        name: 'about',
+        component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
     },
+    {
+        path: '/bulletin',
+        name: 'bulletin',
+        component: () => import(/* webpackChunkName: "bulletin" */ '../views/BulletinView.vue')
+    },
+    {
+        path: '/admin-dashboard',
+        name: 'admin-dashboard',
+        component: () => import(/* webpackChunkName: "admin-dashboard" */ '../views/AdminDashboard.vue')
+    },
+    {
+        path: '/schedules',
+        name: 'schedules',
+        component: () => import(/* webpackChunkName: "schedules" */ '../views/ScheduleView.vue')
+    },
+
     {
         path: '/login',
         name: 'login',

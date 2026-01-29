@@ -191,7 +191,7 @@
                       </span>
                    </td>
                    <td class="px-8 py-4 text-right">
-                      <div v-if="req.status === 'Pending'" class="flex justify-end gap-2" @click.stop>
+                      <div v-if="req.dh_status === 'Pending' && req.type !== 'Shift Swap Request' && req.type !== 'Overtime Request'" class="flex justify-end gap-2" @click.stop>
                          <button @click="updateStatus(req.id, 'Approved')" class="p-2 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded-lg transition" title="Approve">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -268,7 +268,7 @@
              
              <div class="p-6 border-t border-gray-700 bg-[#333] flex justify-end gap-3">
                 <button @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition">Close</button>
-                <div v-if="selectedRequest && selectedRequest.status === 'Pending'" class="flex gap-2">
+                <div v-if="selectedRequest && selectedRequest.dh_status === 'Pending' && selectedRequest.type !== 'Shift Swap Request' && selectedRequest.type !== 'Overtime Request'" class="flex gap-2">
                    <button @click="updateStatus(selectedRequest.id, 'Rejected')" class="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50 rounded-lg transition">Reject</button>
                    <button @click="updateStatus(selectedRequest.id, 'Approved')" class="px-6 py-2 bg-[#d4a017] hover:bg-[#b88b14] text-black font-bold rounded-lg transition shadow-lg">Approve</button>
                 </div>
@@ -276,7 +276,42 @@
           </div>
        </div>
 
+       <!-- Confirmation Modal -->
+       <div v-if="showConfirmation" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+           <div class="bg-[#2A2A2A] w-full max-w-sm rounded-2xl shadow-2xl border border-gray-700 p-8 text-center animate-zoom-in">
+               <div :class="['w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-colors duration-500', pendingAction.status === 'Approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500']">
+                   <svg v-if="pendingAction.status === 'Approved'" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                   <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+               </div>
+               <h3 class="text-xl font-bold text-white mb-2">Confirm {{ pendingAction.status }}</h3>
+               <p class="text-gray-400 mb-8">Are you sure you want to {{ pendingAction.status.toLowerCase() }} this request? This action cannot be undone.</p>
+               <div class="flex gap-3">
+                   <button @click="showConfirmation = false" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition font-medium">Cancel</button>
+                   <button @click="confirmStatusUpdate" :class="['flex-1 py-3 rounded-xl text-black font-bold transition shadow-lg px-2', pendingAction.status === 'Approved' ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400']">
+                      Yes, {{ pendingAction.status }}
+                   </button>
+               </div>
+           </div>
+       </div>
+
     </div>
+
+       <!-- Logout Confirmation Modal -->
+       <div v-if="showLogoutModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+           <div class="bg-[#2A2A2A] w-full max-w-sm rounded-2xl shadow-2xl border border-gray-700 p-8 text-center animate-zoom-in">
+               <div class="w-16 h-16 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center mx-auto mb-6">
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12" />
+                   </svg>
+               </div>
+               <h3 class="text-xl font-bold text-white mb-2">Confirm Logout</h3>
+               <p class="text-gray-400 mb-8 leading-relaxed">Are you sure you want to log out?</p>
+               <div class="flex gap-3">
+                   <button @click="showLogoutModal = false" class="flex-1 py-3 bg-[#374151] hover:bg-[#4b5563] text-white rounded-xl transition font-medium">Cancel</button>
+                   <button @click="confirmLogout" class="flex-1 py-3 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl transition shadow-lg">Yes, Log out</button>
+               </div>
+           </div>
+       </div>
   </div>
 </template>
 
@@ -292,38 +327,28 @@ export default {
       showProfileDropdown: false,
       showRequestModal: false,
       selectedRequest: null,
+      showConfirmation: false,
+      pendingAction: { id: null, status: '' },
       stats: {
-        total: 10,
-        pending: 3,
-        approved: 7
+        total: 0,
+        pending: 0,
+        approved: 0
       },
-      requests: [
-         {
-            id: 1,
-            name: "Raque Canete",
-            initials: "RC",
-            department: "Operations",
-            type: "Leave Request",
-            reason: "Personal family emergency needs attention immediately.",
-            date: "Jan 26, 2026",
-            status: "Pending"
-         },
-         {
-            id: 4,
-            name: "Bob Wilson",
-            initials: "BW",
-            department: "Logistics",
-            type: "Undertime",
-            reason: "Feeling unwell, leaving early.",
-            date: "Jan 24, 2026",
-            status: "Rejected"
-         }
-      ]
+      userData: {
+        first_name: 'DH',
+        last_name: 'User',
+        email: ''
+      },
+      requests: [],
+      showLogoutModal: false
     }
   },
   computed: {
     filteredRequests() {
        let result = this.requests;
+       
+       // Exclude requests not relevant to DH
+       result = result.filter(req => req.type !== 'Shift Swap Request' && req.type !== 'Overtime Request');
        
        // Filter by Status Tab
        if (this.currentFilter !== 'All') {
@@ -349,11 +374,68 @@ export default {
        return result;
     }
   },
+  mounted() {
+    this.initUser();
+    this.fetchData();
+  },
   methods: {
-    handleLogout() {
-       if(confirm('Are you sure you want to log out?')) {
-          this.$router.push('/login');
-       }
+    initUser() {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        this.userData = JSON.parse(userStr);
+      }
+    },
+    async fetchData() {
+      try {
+        const response = await fetch('http://localhost:3000/requests');
+        const data = await response.json();
+        this.requests = data.map(r => ({
+          id: r.id,
+          name: `${r.first_name} ${r.last_name}`,
+          initials: (r.first_name[0] + r.last_name[0]).toUpperCase(),
+          department: r.department || 'Operations',
+          type: r.type,
+          reason: r.reason,
+          date: new Date(r.created_at).toLocaleDateString(),
+          status: r.status,
+          dh_status: r.dh_status,
+          dh_approved_by: r.dh_approved_by
+        }));
+
+        this.stats.total = this.requests.length;
+        this.stats.pending = this.requests.filter(r => r.dh_status === 'Pending').length;
+        this.stats.approved = this.requests.filter(r => r.dh_status === 'Approved').length;
+      } catch (error) {
+        console.error("Error fetching DH data:", error);
+      }
+    },
+    updateStatus(id, newStatus) {
+       this.pendingAction = { id, status: newStatus };
+       this.showConfirmation = true;
+    },
+    async confirmStatusUpdate() {
+        const { id, status } = this.pendingAction;
+        try {
+           const response = await fetch(`http://localhost:3000/requests/${id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                 status: status,
+                 role: 'Department Head',
+                 adminName: `${this.userData.first_name} ${this.userData.last_name}`
+              })
+           });
+           
+           if (response.ok) {
+              await this.fetchData();
+              this.showConfirmation = false;
+              this.closeModal();
+           } else {
+              alert('Update failed');
+           }
+        } catch (e) {
+           console.error(e);
+        }
     },
     viewRequest(req) {
       this.selectedRequest = req;
@@ -363,21 +445,6 @@ export default {
       this.showRequestModal = false;
       this.selectedRequest = null;
     },
-    updateStatus(id, newStatus) {
-       const req = this.requests.find(r => r.id === id);
-       if (req) {
-          if(confirm(`Are you sure you want to mark this as ${newStatus}?`)) {
-             req.status = newStatus;
-             // Update stats mock
-             if (newStatus === 'Approved') this.stats.approved++;
-             if (newStatus === 'Rejected') { /* no stat for rejected yet */ }
-             this.stats.pending--;
-             
-             // Close modal if open
-             this.closeModal();
-          }
-       }
-    },
     getStatusColor(status) {
        switch(status) {
           case 'Approved': return 'bg-green-500/10 text-green-500 border-green-500/20';
@@ -385,6 +452,15 @@ export default {
           case 'Rejected': return 'bg-red-500/10 text-red-500 border-red-500/20';
           default: return 'bg-gray-500/10 text-gray-500';
        }
+    },
+    handleLogout() {
+      this.showLogoutModal = true;
+      this.showProfileDropdown = false;
+    },
+    confirmLogout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      this.$router.push('/login');
     }
   }
 }

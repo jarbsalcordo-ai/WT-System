@@ -82,16 +82,29 @@
               <div class="mt-6 border-t border-gray-700 pt-4">
                  <p class="text-xs text-gray-400 uppercase mb-3">Approval Status</p>
                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-black font-bold text-xs">HR</div>
-                    <div class="h-0.5 flex-1 bg-gray-600"></div>
-                     <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-xs">SU</div>
-                    <div class="h-0.5 flex-1 bg-gray-600"></div>
-                     <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-gray-400 font-bold text-xs">OM</div>
+                    <template v-if="selectedRequest.type !== 'Shift Swap Request' && selectedRequest.type !== 'Overtime Request'">
+                        <div :class="['w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs', getApprovalColor(selectedRequest.dh_status)]">DH</div>
+                        <div :class="['h-0.5 flex-1', selectedRequest.dh_status === 'Approved' ? 'bg-green-500' : 'bg-gray-600']"></div>
+                    </template>
+                    <div :class="['w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs', getApprovalColor(selectedRequest.hr_status)]">HR</div>
+                    <div :class="['h-0.5 flex-1', selectedRequest.hr_status === 'Approved' ? 'bg-green-500' : 'bg-gray-600']"></div>
+                    <div :class="['w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs', getApprovalColor(selectedRequest.om_status)]">OM</div>
                  </div>
-                 <div class="flex justify-between text-xs text-gray-500 mt-2">
-                    <span>Approved</span>
-                    <span>Pending</span>
-                    <span>Waiting</span>
+                 <div class="flex justify-between text-[10px] text-gray-500 mt-2 px-1">
+                    <template v-if="selectedRequest.type !== 'Shift Swap Request' && selectedRequest.type !== 'Overtime Request'">
+                        <div class="flex flex-col items-center w-8">
+                           <span :class="{'text-green-500': selectedRequest.dh_status === 'Approved', 'text-red-500': selectedRequest.dh_status === 'Rejected'}">{{ selectedRequest.dh_status }}</span>
+                           <span v-if="selectedRequest.dh_approver" class="text-[8px] text-gray-400 text-center truncate w-16">{{ selectedRequest.dh_approver }}</span>
+                        </div>
+                    </template>
+                    <div class="flex flex-col items-center w-8">
+                       <span :class="{'text-green-500': selectedRequest.hr_status === 'Approved', 'text-yellow-500': selectedRequest.hr_status === 'Pending', 'text-red-500': selectedRequest.hr_status === 'Rejected'}">{{ selectedRequest.hr_status }}</span>
+                       <span v-if="selectedRequest.hr_approver" class="text-[8px] text-gray-400 text-center truncate w-16">{{ selectedRequest.hr_approver }}</span>
+                    </div>
+                    <div class="flex flex-col items-center w-8">
+                       <span :class="{'text-green-500': selectedRequest.om_status === 'Approved', 'text-yellow-500': selectedRequest.om_status === 'Pending' || selectedRequest.om_status === 'Waiting', 'text-red-500': selectedRequest.om_status === 'Rejected'}">{{ selectedRequest.om_status === 'Waiting' ? 'Pending' : selectedRequest.om_status }}</span>
+                       <span v-if="selectedRequest.om_approver" class="text-[8px] text-gray-400 text-center truncate w-16">{{ selectedRequest.om_approver }}</span>
+                    </div>
                  </div>
               </div>
            </div>
@@ -135,6 +148,15 @@ export default {
         case 'Pending': return 'bg-yellow-500/20 text-yellow-500 border-yellow-500/20';
         case 'Rejected': return 'bg-red-500/20 text-red-500 border-red-500/20';
         default: return 'bg-gray-500/20 text-gray-500';
+      }
+    },
+    getApprovalColor(status) {
+      switch(status) {
+        case 'Approved': return 'bg-green-500 text-black';
+        case 'Pending': return 'bg-yellow-500 text-black';
+        case 'Waiting': return 'bg-yellow-500 text-black'; // Treat Waiting as Pending
+        case 'Rejected': return 'bg-red-500 text-white';
+        default: return 'bg-gray-600 text-gray-400';
       }
     }
   }

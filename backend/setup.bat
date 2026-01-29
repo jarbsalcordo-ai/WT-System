@@ -1,0 +1,6 @@
+@echo off
+echo Installing dependencies...
+call npm install
+echo Initializing database...
+node init_db.js
+echo Done.
