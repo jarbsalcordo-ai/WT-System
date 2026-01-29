@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+
+# Frontend Service
+[[services]]
+name = "frontend"
+path = "/"
+startCommand = "npm start"
+
+# Backend Service
+[[services]]
+name = "backend"
+path = "/backend"
+startCommand = "npm start"
